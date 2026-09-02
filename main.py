@@ -76,9 +76,10 @@ def download_and_zip(task_id: str, url: str):
         'outtmpl': f'{output_dir}/%(playlist_index)s - %(title)s.%(ext)s',
         'noplaylist': False,
         'ignoreerrors': True,
-        'quiet': False,
+        'quiet': False, # Make sure this is False so it prints to the cloud logs!
         'progress_hooks': [progress_hook],
         'js_runtimes': {'node': {}},
+        'source_address': '0.0.0.0', 
     }
 
     try:
