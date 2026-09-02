@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playlist to MP3</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ["Roboto", "sans-serif"] },
+            colors: {
+              yt: {
+                bg: "#0f0f0f",
+                card: "#212121",
+                red: "#ff0000",
+                redHover: "#cc0000",
+              },
+            },
+            animation: { blob: "blob 7s infinite" },
+            keyframes: {
+              blob: {
+                "0%": { transform: "translate(0px, 0px) scale(1)" },
+                "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+                "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
+                "100%": { transform: "translate(0px, 0px) scale(1)" },
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      /* Custom scrollbar for the video list */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.4);
+      }
+      body {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+        overflow-y: hidden;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-yt-bg min-h-screen flex items-center justify-center relative font-sans text-white"
+  >
+    <div
+      class="absolute top-10 -left-10 w-96 h-96 bg-red-600 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob"
+    ></div>
+    <div
+      class="absolute top-20 -right-10 w-80 h-80 bg-white rounded-full mix-blend-overlay filter blur-[100px] opacity-10 animate-blob"
+      style="animation-delay: 2s"
+    ></div>
+    <div
+      class="absolute -bottom-10 left-32 w-96 h-96 bg-red-800 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob"
+      style="animation-delay: 4s"
+    ></div>
+
+    <div
+      class="relative w-full max-w-2xl p-8 mx-4 bg-yt-card/40 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.6)] z-10 max-h-[90vh] flex flex-col"
+    >
+      <div class="flex items-center justify-center gap-3 mb-6 shrink-0">
+        <svg
+          height="32"
+          viewBox="0 0 24 24"
+          width="32"
+          style="fill: #ff0000; drop-shadow: 0 4px 6px rgba(255, 0, 0, 0.2)"
+        >
+          <path
+            d="M21.58 6.49c-.23-.88-.93-1.58-1.81-1.81C18.17 4.25 12 4.25 12 4.25s-6.17 0-7.77.43c-.88.23-1.58.93-1.81 1.81C2 8.09 2 12 2 12s0 3.91.42 5.51c.23.88.93 1.58 1.81 1.81 1.6.43 7.77.43 7.77.43s6.17 0 7.77-.43c.88-.23 1.58-.93 1.81-1.81C22 15.91 22 12 22 12s0-3.91-.42-5.51z"
+          />
+          <path d="M10 15.46l5.46-3.46L10 8.54v6.92z" style="fill: #fff" />
+        </svg>
+        <h1 class="text-2xl font-bold tracking-tight text-white/90">
+          Playlist Downloader
+        </h1>
+      </div>
+
+      <div class="flex flex-col gap-4 shrink-0">
+        <input
+          type="text"
+          id="urlInput"
+          placeholder="Paste playlist URL here..."
+          class="w-full bg-black/50 border border-white/10 rounded-2xl px-6 py-4 text-white/90 placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-red-500 transition-all duration-300"
+        />
+
+        <button
+          id="actionBtn"
+          onclick="analyzeUrl()"
+          class="w-full bg-yt-red/80 hover:bg-yt-red border border-red-500/50 text-white font-medium rounded-2xl px-6 py-4 transition-all duration-300 shadow-lg"
+        >
+          Analyze Playlist
+        </button>
+      </div>
+
+      <!-- Scrollable Video List Area -->
+      <div
+        id="playlistContainer"
+        class="hidden flex-col gap-3 mt-6 overflow-y-auto custom-scrollbar pr-2 pb-2 flex-grow"
+      >
+        <!-- Videos inject here -->
+      </div>
+
+      <!-- Overall Status / Final Download -->
+      <div
+        id="statusArea"
+        class="hidden flex-col items-center justify-center mt-4 pt-4 border-t border-white/10 shrink-0"
+      >
+        <h3 id="statusTitle" class="text-md font-medium text-white/90 mb-1">
+          Downloading...
+        </h3>
+        <p
+          id="statusDesc"
+          class="text-xs text-white/50 text-center max-w-xs truncate"
+        >
+          Please keep this window open
+        </p>
+
+        <a
+          id="downloadLink"
+          class="hidden mt-4 w-full bg-white text-black hover:bg-gray-200 font-semibold rounded-full px-6 py-3 text-center transition-all duration-300 shadow-lg"
+        >
+          Save Complete ZIP
+        </a>
+      </div>
+    </div>
+
+    <script>
+      let globalUrl = "";
+
+      // STEP 1: Fetch and display the list of videos
+      async function analyzeUrl() {
+        const url = document.getElementById("urlInput").value;
+        if (!url) return alert("Please paste a link first.");
+        globalUrl = url;
+
+        const btn = document.getElementById("actionBtn");
+        btn.disabled = true;
+        btn.innerText = "Fetching data...";
+
+        try {
+          const response = await fetch("/api/analyze", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: url }),
+          });
+          const data = await response.json();
+
+          if (data.error) throw new Error(data.error);
+
+          // Render the videos
+          const container = document.getElementById("playlistContainer");
+          container.innerHTML = "";
+
+          data.videos.forEach((vid) => {
+            // Create an individual card for each video
+            container.innerHTML += `
+                        <div class="relative overflow-hidden bg-black/30 border border-white/10 rounded-xl p-3 flex gap-4 items-center">
+                            <!-- Background Progress Bar Layer -->
+                            <div id="prog-bg-${vid.id}" class="absolute top-0 left-0 h-full bg-yt-red/30 w-0 transition-all duration-500 z-0"></div>
+                            
+                            <img src="${vid.thumbnail}" class="w-24 h-14 object-cover rounded-md shadow-md z-10 border border-white/5">
+                            <div class="flex-col flex-1 z-10 overflow-hidden">
+                                <p class="text-white/90 text-sm font-medium truncate">${vid.title}</p>
+                                <p id="prog-text-${vid.id}" class="text-white/40 text-xs mt-1 font-mono">Waiting in queue...</p>
+                            </div>
+                        </div>
+                    `;
+          });
+
+          container.classList.remove("hidden");
+          container.classList.add("flex");
+
+          // Morph the button into the "Download" button
+          btn.innerText = "Download All to ZIP";
+          btn.classList.replace("bg-yt-red/80", "bg-white");
+          btn.classList.replace("text-white", "text-black");
+          btn.classList.replace("hover:bg-yt-red", "hover:bg-gray-200");
+          btn.classList.replace("border-red-500/50", "border-white");
+          btn.onclick = startDownload;
+          btn.disabled = false;
+        } catch (error) {
+          alert("Failed to analyze URL. " + error.message);
+          btn.disabled = false;
+          btn.innerText = "Analyze Playlist";
+        }
+      }
+
+      // STEP 2: Trigger the actual download and start polling
+      async function startDownload() {
+        const btn = document.getElementById("actionBtn");
+        btn.style.display = "none"; // Hide the main button
+        document.getElementById("urlInput").disabled = true;
+
+        const statusArea = document.getElementById("statusArea");
+        statusArea.classList.remove("hidden");
+        statusArea.classList.add("flex");
+
+        try {
+          const response = await fetch("/api/start-download", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: globalUrl }),
+          });
+          const data = await response.json();
+          pollStatus(data.task_id);
+        } catch (error) {
+          document.getElementById("statusTitle").innerText = "Connection Error";
+          document
+            .getElementById("statusTitle")
+            .classList.replace("text-white/90", "text-red-400");
+        }
+      }
+
+      // STEP 3: Poll for individual video progress
+      async function pollStatus(taskId) {
+        const interval = setInterval(async () => {
+          try {
+            const response = await fetch(`/api/status/${taskId}`);
+            const data = await response.json();
+
+            // Update overall status
+            const statusTitle = document.getElementById("statusTitle");
+            const statusDesc = document.getElementById("statusDesc");
+
+            if (data.status === "downloading" || data.status === "starting") {
+              statusTitle.innerText = "Extracting Audio...";
+              statusDesc.innerText = "Processing your files";
+
+              // Update individual progress bars
+              if (data.progress) {
+                Object.entries(data.progress).forEach(([vidId, percent]) => {
+                  const bg = document.getElementById(`prog-bg-${vidId}`);
+                  const text = document.getElementById(`prog-text-${vidId}`);
+                  if (bg && text) {
+                    bg.style.width = percent;
+                    text.innerText =
+                      percent === "100%"
+                        ? "Complete"
+                        : `Downloading: ${percent}`;
+                    if (percent === "100%")
+                      text.classList.replace("text-white/40", "text-green-400");
+                  }
+                });
+              }
+            } else if (data.status === "completed") {
+              clearInterval(interval);
+              statusTitle.innerText = "All Done!";
+              statusDesc.innerText = "Your ZIP file is ready.";
+
+              // Ensure all bars visually hit 100%
+              if (data.progress) {
+                Object.keys(data.progress).forEach((vidId) => {
+                  const bg = document.getElementById(`prog-bg-${vidId}`);
+                  const text = document.getElementById(`prog-text-${vidId}`);
+                  if (bg) bg.style.width = "100%";
+                  if (text) {
+                    text.innerText = "Complete";
+                    text.classList.replace("text-white/40", "text-green-400");
+                  }
+                });
+              }
+
+              const downloadBtn = document.getElementById("downloadLink");
+              downloadBtn.href = `/api/download/${taskId}`;
+              downloadBtn.classList.remove("hidden");
+              downloadBtn.classList.add("block");
+            } else if (data.status === "failed") {
+              clearInterval(interval);
+              statusTitle.innerText = "Failed";
+              statusTitle.classList.replace("text-white/90", "text-red-400");
+              statusDesc.innerText =
+                data.error || "An error occurred during download.";
+            }
+          } catch (error) {
+            // Ignore brief network timeouts
+          }
+        }, 1000);
+      }
+    </script>
+  </body>
+</html>
