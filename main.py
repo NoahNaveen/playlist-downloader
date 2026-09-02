@@ -26,6 +26,9 @@ async def analyze_playlist(request: PlaylistRequest):
         'quiet': True,
         'js_runtimes': {'node': {}},
         'cookiefile': 'cookies.txt',
+        'extractor_args': {'youtube': ['player_client=android']}, 
+        'sleep_interval': 5,      
+        'max_sleep_interval': 10,
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -82,6 +85,9 @@ def download_and_zip(task_id: str, url: str):
         'js_runtimes': {'node': {}},
         'source_address': '0.0.0.0', 
         'cookiefile': 'cookies.txt',
+        'extractor_args': {'youtube': ['player_client=android']}, 
+        'sleep_interval': 5,      
+        'max_sleep_interval': 10,
     }
 
     try:
