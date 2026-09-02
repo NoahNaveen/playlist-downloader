@@ -25,6 +25,7 @@ async def analyze_playlist(request: PlaylistRequest):
         'extract_flat': True, # Scrapes metadata only, no downloading
         'quiet': True,
         'js_runtimes': {'node': {}},
+        'cookiefile': 'cookies.txt',
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -80,6 +81,7 @@ def download_and_zip(task_id: str, url: str):
         'progress_hooks': [progress_hook],
         'js_runtimes': {'node': {}},
         'source_address': '0.0.0.0', 
+        'cookiefile': 'cookies.txt',
     }
 
     try:
